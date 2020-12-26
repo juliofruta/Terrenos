@@ -1,10 +1,13 @@
 const puppeteer = require('puppeteer');
 
 async function scrapeProduct(url) {
-    const browser = await puppeteer.launch()
+    const browser = await puppeteer.launch({ headless: false })
     const page = await browser.newPage()
     await page.goto(url)
     const div = await page.$$(".tileV2")
+    
+    var model = []
+
     for(const element of div) {
         
         // Get ad price
@@ -18,13 +21,22 @@ async function scrapeProduct(url) {
         const expandedDescriptionText = await espandedDescription.getProperty('innerText');
         const expandedDescriptionTextJSON = await expandedDescriptionText.jsonValue()
 
-        console.log(
+        await element.click()
+
+        // TODO visit detailed page.
+        // TODO extract geolocation info for future land price estimation.
+
+        model.push(
             {
                 price: adPriceText,
                 espandedDescription: expandedDescriptionTextJSON
             }
         )
     }
+
+    //TODO: implement pagination
+
+    console.log(model)
 }
 
 scrapeProduct('https://www.vivanuncios.com.mx/s-venta-inmuebles/coyoacan/v1c1097l10268p1?pr=,2000000')
