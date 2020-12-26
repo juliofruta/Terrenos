@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 
 async function scrapeProduct(url) {
-    const browser = await puppeteer.launch({ headless: false })
+    const browser = await puppeteer.launch()//({ headless: false })
     const page = await browser.newPage()
     await page.goto(url)
     const div = await page.$$(".tileV2")
@@ -15,28 +15,40 @@ async function scrapeProduct(url) {
         const text = await adPrice.getProperty('innerText');
         const adPriceText = await text.jsonValue()
 
-        // Get location
+        // Get description
         const [readMore] = await element.$$('div.tile-read-more-expanded')
         const [espandedDescription] = await readMore.$$('div.expanded-description')
         const expandedDescriptionText = await espandedDescription.getProperty('innerText');
         const expandedDescriptionTextJSON = await expandedDescriptionText.jsonValue()
 
-        await element.click()
+        // Get title
+        const [urlElement] = await element.$$('div.tile-desc')
+        const [ahreflink] = await element.$$('a.href-link')
+        const href = await ahreflink.getProperty('href')
+        const hrefText = await href.jsonValue()
 
-        // TODO visit detailed page.
-        // TODO extract geolocation info for future land price estimation.
-
-        model.push(
+        await model.push(
             {
                 price: adPriceText,
-                espandedDescription: expandedDescriptionTextJSON
+                espandedDescription: expandedDescriptionTextJSON,
+                url: hrefText
             }
         )
     }
 
-    //TODO: implement pagination
+    for(const entry of model) {
+        await page.setDefaultNavigationTimeout(0)
+        await page.goto(entry.url)
+        const [elementWithLocation] = await page.$$('img.signed-map-image')
+        const locationURL = await elementWithLocation.getProperty('src')
+        const locationURLText = await locationURL.jsonValue()
+        const [, coordinates] = locationURLText.match(/center=(.*?)&zoom/) || [];
+        entry.coordinates = coordinates
+    }
 
     console.log(model)
 }
+
+
 
 scrapeProduct('https://www.vivanuncios.com.mx/s-venta-inmuebles/coyoacan/v1c1097l10268p1?pr=,2000000')
