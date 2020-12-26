@@ -30,7 +30,7 @@ async function scrapeProduct(url) {
         await model.push(
             {
                 price: adPriceText,
-                espandedDescription: expandedDescriptionTextJSON,
+                description: expandedDescriptionTextJSON,
                 url: hrefText
             }
         )
@@ -46,6 +46,8 @@ async function scrapeProduct(url) {
         entry.coordinates = coordinates
     }
 
+    //TODO: use numbers for price
+    //TODO: user numbers for location
     console.log(model)
 }
 
